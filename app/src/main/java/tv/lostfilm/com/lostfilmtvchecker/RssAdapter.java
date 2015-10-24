@@ -2,12 +2,10 @@ package tv.lostfilm.com.lostfilmtvchecker;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.os.Parcelable;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -16,14 +14,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,16 +59,16 @@ public class RssAdapter extends RecyclerView.Adapter<RssAdapter.ViewHolder> {
         Pattern p = Pattern.compile(PATTERN, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
         Matcher m = p.matcher(rssItem.getDescription());
         if (m.find()) {
-            String imageUrl = m.group(1);
+            final String imageUrl = m.group(1);
             Picasso.with(context)
                     .load(StringEscapeUtils.unescapeHtml4(imageUrl))
-//                    .centerInside()
-//                    .fit()
-                    .into(new Target() {
+                    .noPlaceholder()
+                    .fit()
+                    .centerInside()
+                    .into(holder.imageView, new Callback.EmptyCallback() {
                         @Override
-                        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                            holder.imageView.setImageBitmap(bitmap);
-
+                        public void onSuccess() {
+                            final Bitmap bitmap = ((BitmapDrawable) holder.imageView.getDrawable()).getBitmap();
                             Palette.from(bitmap).generate(new Palette.PaletteAsyncListener() {
                                 @Override
                                 public void onGenerated(Palette palette) {
@@ -82,25 +80,37 @@ public class RssAdapter extends RecyclerView.Adapter<RssAdapter.ViewHolder> {
                                 }
                             });
                         }
-
-                        @Override
-                        public void onBitmapFailed(Drawable errorDrawable) {
-
-                        }
-
-                        @Override
-                        public void onPrepareLoad(Drawable placeHolderDrawable) {
-
-                        }
                     });
         }
 
+        holder.downloadView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                launchTorrentIntent(rssItem);
+            }
+        });
+    }
+
+    private void launchTorrentIntent(RssItem rssItem) {
+        final Intent i = new Intent(Intent.ACTION_VIEW);
+        i.addCategory(Intent.CATEGORY_DEFAULT);
+        i.setType("application/x-bittorrent");
+        i.setData(Uri.parse(rssItem.getLink()));
+        try {
+            context.startActivity(Intent.createChooser(i, "Choose app:"));
+        } catch (Exception e) {
+            Toast.makeText(context, "Torrent client not found", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void addAll(ArrayList<RssItem> rssItems) {
         this.rssItems.clear();
         this.rssItems.addAll(rssItems);
         notifyDataSetChanged();
+    }
+
+    public ArrayList<RssItem> getContent() {
+        return rssItems;
     }
 
     @Override
@@ -113,6 +123,8 @@ public class RssAdapter extends RecyclerView.Adapter<RssAdapter.ViewHolder> {
         TextView titleView;
         @Bind(R.id.imageView)
         ImageView imageView;
+        @Bind(R.id.downloadView)
+        ImageView downloadView;
         @Bind(R.id.card_view)
         CardView cardView;
 
