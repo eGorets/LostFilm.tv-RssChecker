@@ -50,6 +50,7 @@ public class RssReader {
             BufferedReader in = new BufferedReader(new InputStreamReader(stream, Charset.forName("cp1251")));
             RssHandler handler = new RssHandler();
             InputSource is = new InputSource(in);
+            is.setEncoding("UTF-8");
             parser.parse(is, handler);
 
             return handler.getResult();

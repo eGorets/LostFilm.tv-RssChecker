@@ -10,9 +10,11 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.widget.AbsListView;
 
-import com.google.android.gms.analytics.GoogleAnalytics;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.analytics.Tracker;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
@@ -42,11 +44,15 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     RecyclerView recyclerView;
     @Bind(R.id.refreshLayout)
     SwipeRefreshLayout swipeRefreshLayout;
+    @Bind(R.id.adView)
+    AdView mAdView;
 
     private Observable<ArrayList<RssItem>> rss;
     private RssAdapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
+    private InterstitialAd mInterstitialAd;
+    public static final String RSS_DOMAIN = "http://www.lostfilm.tv/rssdd.xml";
     private static final String PATTERN = "\\\"(http.*?)\\\"";
 
     @Override
@@ -54,9 +60,20 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-
         AnalyticsTrackers.initialize(this);
-        GoogleAnalytics.getInstance(this);
+        Tracker tracker = AnalyticsTrackers.getInstance().get(AnalyticsTrackers.Target.APP);
+
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+
+
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId("ca-app-pub-1657105281106558/7856409622");
+
+        AdRequest adRequest2 = new AdRequest.Builder()
+                .build();
+
+        mInterstitialAd.loadAd(adRequest2);
 
         mAdapter = new RssAdapter(getApplicationContext());
 
@@ -110,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void readRss(Subscriber<? super ArrayList<RssItem>> subscriber) {
         try {
-            URL url = new URL("http://www.lostfilm.tv/rssdd.xml");
+            URL url = new URL(RSS_DOMAIN);
             RssFeed feed = RssReader.read(url);
 
             ArrayList<RssItem> rssItems = feed.getRssItems();
@@ -135,5 +152,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 });
     }
 
-
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        if (mInterstitialAd.isLoaded()) {
+            mInterstitialAd.show();
+        }
+    }
 }

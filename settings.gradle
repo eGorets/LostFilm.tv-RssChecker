@@ -1,1 +1,1 @@
-include ':app', ':android-rss-reader-library'
+include ':app'
