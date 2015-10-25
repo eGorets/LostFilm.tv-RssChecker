@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.0"
 
     defaultConfig {
-        applicationId "tv.lostfilm.com.lostfilmtvchecker"
+        applicationId "com.lost.rss"
         minSdkVersion 10
         targetSdkVersion 21
         versionCode 1

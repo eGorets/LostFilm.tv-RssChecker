@@ -5,10 +5,12 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,12 +24,11 @@ import com.squareup.picasso.Picasso;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import tv.lostfilm.com.android_rss_reader_library.RssItem;
+import tv.lostfilm.com.lostfilmtvchecker.utils.ParserUtils;
 
 /**
  * Created by Gorets on 23.10.2015.
@@ -49,21 +50,18 @@ public class RssAdapter extends RecyclerView.Adapter<RssAdapter.ViewHolder> {
         return new ViewHolder(view);
     }
 
-    private static final String PATTERN = "\\\"(http.*?)\\\"";
-
     @Override
     public void onBindViewHolder(final RssAdapter.ViewHolder holder, int position) {
         final RssItem rssItem = rssItems.get(position);
 
         holder.titleView.setText(rssItem.getTitle());
-        Pattern p = Pattern.compile(PATTERN, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-        Matcher m = p.matcher(rssItem.getDescription());
-        if (m.find()) {
-            final String imageUrl = m.group(1);
+
+        final String imageUrl = ParserUtils.getClearImageAddress(rssItem);
+        if (!TextUtils.isEmpty(imageUrl)) {
             Picasso.with(context)
                     .load(StringEscapeUtils.unescapeHtml4(imageUrl))
-                    .noPlaceholder()
                     .fit()
+                    .placeholder(new ColorDrawable(context.getResources().getColor(android.R.color.transparent)))
                     .centerInside()
                     .into(holder.imageView, new Callback.EmptyCallback() {
                         @Override
