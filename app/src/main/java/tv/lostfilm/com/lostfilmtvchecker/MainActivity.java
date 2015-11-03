@@ -64,12 +64,7 @@ public class MainActivity extends BaseActivity implements SwipeRefreshLayout.OnR
 
         mAdapter = new RssAdapter(getApplicationContext());
 
-        rss = Observable.create(new Observable.OnSubscribe<ArrayList<RssItem>>() {
-            @Override
-            public void call(Subscriber<? super ArrayList<RssItem>> subscriber) {
-                readRss(subscriber);
-            }
-        });
+        rss = Observable.create(subscriber -> readRss(subscriber));
 
         rss.doOnError(throwable -> swipeRefreshLayout.setRefreshing(false))
                 .subscribeOn(Schedulers.newThread())
