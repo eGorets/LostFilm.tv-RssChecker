@@ -71,20 +71,12 @@ public class MainActivity extends BaseActivity implements SwipeRefreshLayout.OnR
             }
         });
 
-        rss.doOnError(new Action1<Throwable>() {
-            @Override
-            public void call(Throwable throwable) {
-                swipeRefreshLayout.setRefreshing(false);
-                Log.e(TAG, "Error: " + throwable.toString());
-            }
-        }).subscribeOn(Schedulers.newThread())
+        rss.doOnError(throwable -> swipeRefreshLayout.setRefreshing(false))
+                .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<ArrayList<RssItem>>() {
-                    @Override
-                    public void call(ArrayList<RssItem> rssItems) {
-                        swipeRefreshLayout.setRefreshing(false);
-                        mAdapter.addAll(rssItems);
-                    }
+                .subscribe(rssItems -> {
+                    swipeRefreshLayout.setRefreshing(false);
+                    mAdapter.addAll(rssItems);
                 });
 
         recyclerView.setHasFixedSize(true);
